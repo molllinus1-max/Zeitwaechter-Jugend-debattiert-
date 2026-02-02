@@ -1,13 +1,11 @@
 {
-  "name": "Zeitwächter – Jugend debattiert",
+  "name": "Zeitwächter - Jugend debattiert",
   "short_name": "Zeitwächter",
-  "description": "Timer-App für Jugend debattiert Debatten mit Signaltönen und Zeitkontrolle",
-  "start_url": "./zeitwaechter.html",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#1a1a2e",
   "theme_color": "#1a1a2e",
-  "orientation": "any",
-  "lang": "de-DE",
   "icons": [
     {
       "src": "icon-192.png",
