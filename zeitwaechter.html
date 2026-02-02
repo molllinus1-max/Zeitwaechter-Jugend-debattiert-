@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Zeitwächter">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1a1a2e">
+    
+    <title>Zeitwächter – Jugend debattiert</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' fill='%231a1a2e'/><text x='90' y='110' font-size='80' font-family='Arial,sans-serif' font-weight='bold' text-anchor='middle' fill='%23ff6b35'>ZW</text></svg>">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a1a2e;
+            --accent: #ff6b35;
+            --accent-light: #ff8c61;
+            --bg: #f5f5f0;
+            --text: #2d2d2d;
+            --border: #d4d4ce;
+            --warning: #ffd93d;
+            --danger: #e63946;
+            --success: #06d6a0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #f5f5f0 0%, #e8e8dd 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: var(--text);
+            overflow-x: hidden;
+            touch-action: manipulation;
+        }
+
+        .container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+            overflow: hidden;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 32px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 0.95rem;
+            opacity: 0.8;
+            font-weight: 300;
+        }
+
+        .tabs {
+            display: flex;
+            background: #fafafa;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            background: none;
+            border: none;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab:hover {
+            background: #f0f0f0;
+            color: var(--text);
+        }
+
+        .tab.active {
+            color: var(--accent);
+            background: white;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent);
+        }
+
+        .content {
+            padding: 48px 32px;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .phase-info {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .phase-info h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .phase-info .max-time {
+            font-size: 1.1rem;
+            color: #666;
+            font-weight: 300;
+        }
+
+        .timer-display {
+            text-align: center;
+            margin: 48px 0;
+        }
+
+        .time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 7rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: 0.05em;
+            line-height: 1;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            transition: color 0.3s ease;
+        }
+
+        .time.warning {
+            color: var(--warning);
+        }
+
+        .time.danger {
+            color: var(--danger);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .signals {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        .signal-indicator {
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: #f0f0f0;
+            color: #999;
+            transition: all 0.3s ease;
+        }
+
+        .signal-indicator.active {
+            background: var(--accent);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin-top: 48px;
+        }
+
+        .btn {
+            padding: 18px 32px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-start {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-start:hover {
+            background: #05c291;
+            box-shadow: 0 6px 20px rgba(6, 214, 160, 0.3);
+        }
+
+        .btn-pause {
+            background: var(--warning);
+            color: var(--primary);
+        }
+
+        .btn-pause:hover {
+            background: #ffc929;
+            box-shadow: 0 6px 20px rgba(255, 217, 61, 0.3);
+        }
+
+        .btn-stop {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-stop:hover {
+            background: #d62839;
+            box-shadow: 0 6px 20px rgba(230, 57, 70, 0.3);
+        }
+
+        .btn-reset {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: #5a6268;
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn:disabled:hover {
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* Landscape-Optimierung */
+        @media (orientation: landscape) and (max-height: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .content {
+                padding: 24px 32px;
+            }
+
+            .phase-info {
+                margin-bottom: 16px;
+            }
+
+            .phase-info h2 {
+                font-size: 1.4rem;
+            }
+
+            .timer-display {
+                margin: 24px 0;
+            }
+
+            .time {
+                font-size: 5rem;
+            }
+
+            .controls {
+                margin-top: 24px;
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .btn {
+                padding: 14px 20px;
+                font-size: 0.95rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .time {
+                font-size: 5rem;
+            }
+
+            .controls {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .btn {
+                padding: 16px 24px;
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .time {
+                font-size: 4rem;
+            }
+
+            .tab {
+                font-size: 0.9rem;
+                padding: 16px 8px;
+            }
+        }
+
+        /* iOS Safari Fixes */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                /* Verhindert Bounce-Effekt */
+                position: fixed;
+                width: 100%;
+                height: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Zeitwächter</h1>
+            <p>Jugend debattiert</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-phase="opening">Eröffnungsrede</button>
+            <button class="tab" data-phase="discussion">Freie Aussprache</button>
+            <button class="tab" data-phase="closing">Schlussrunde</button>
+        </div>
+
+        <div class="content">
+            <!-- Eröffnungsrede -->
+            <div class="tab-content active" data-phase="opening">
+                <div class="phase-info">
+                    <h2>Eröffnungsrede</h2>
+                    <p class="max-time">Max. 2:00 Minuten</p>
+                </div>
+                <div class="timer-display">
+                    <div class="time" id="time-opening">0:00</div>
+                    <div class="signals">
+                        <span class="signal-indicator" data-signal="1:45">1:45</span>
+                        <span class="signal-indicator" data-signal="2:00">2:00</span>
+                        <span class="signal-indicator" data-signal="2:15">2:15</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Freie Aussprache -->
+            <div class="tab-content" data-phase="discussion">
+                <div class="phase-info">
+                    <h2>Freie Aussprache</h2>
+                    <p class="max-time">Max. 12:00 Minuten</p>
+                </div>
+                <div class="timer-display">
+                    <div class="time" id="time-discussion">0:00</div>
+                    <div class="signals">
+                        <span class="signal-indicator" data-signal="11:45">11:45</span>
+                        <span class="signal-indicator" data-signal="12:00">12:00</span>
+                        <span class="signal-indicator" data-signal="12:15">12:15</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Schlussrunde -->
+            <div class="tab-content" data-phase="closing">
+                <div class="phase-info">
+                    <h2>Schlussrunde</h2>
+                    <p class="max-time">Max. 1:00 Minute</p>
+                </div>
+                <div class="timer-display">
+                    <div class="time" id="time-closing">0:00</div>
+                    <div class="signals">
+                        <span class="signal-indicator" data-signal="0:45">0:45</span>
+                        <span class="signal-indicator" data-signal="1:00">1:00</span>
+                        <span class="signal-indicator" data-signal="1:15">1:15</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-start" id="start">Start</button>
+                <button class="btn btn-pause" id="pause" disabled>Pause</button>
+                <button class="btn btn-stop" id="stop" disabled>Stopp</button>
+                <button class="btn btn-reset" id="reset">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // iOS Audio Context Fix
+        // ========================================
+        let audioContext = null;
+        let audioInitialized = false;
+
+        function initAudioContext() {
+            if (!audioInitialized) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // iOS erfordert resume() nach User-Interaktion
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                
+                audioInitialized = true;
+            }
+            return audioContext;
+        }
+
+        // ========================================
+        // Wake Lock API
+        // ========================================
+        let wakeLock = null;
+
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    
+                    wakeLock.addEventListener('release', () => {
+                        console.log('Wake Lock released');
+                    });
+                    
+                    console.log('Wake Lock activated');
+                }
+            } catch (err) {
+                console.log('Wake Lock not supported or failed:', err);
+            }
+        }
+
+        async function releaseWakeLock() {
+            if (wakeLock !== null) {
+                try {
+                    await wakeLock.release();
+                    wakeLock = null;
+                    console.log('Wake Lock released manually');
+                } catch (err) {
+                    console.log('Wake Lock release failed:', err);
+                }
+            }
+        }
+
+        // Wake Lock bei Visibility Change neu anfordern
+        document.addEventListener('visibilitychange', async () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                await requestWakeLock();
+            }
+        });
+
+        // ========================================
+        // Haptisches Feedback
+        // ========================================
+        function vibrate(pattern) {
+            if ('vibrate' in navigator) {
+                navigator.vibrate(pattern);
+            }
+        }
+
+        function vibrateShort() {
+            vibrate(100); // 100ms kurze Vibration
+        }
+
+        function vibrateLong() {
+            vibrate([200, 100, 200]); // Doppelte Vibration für Alarm
+        }
+
+        // ========================================
+        // Audio-Signale
+        // ========================================
+        let alarmOscillator = null;
+        let alarmGain = null;
+
+        function playBeep() {
+            const ctx = initAudioContext();
+            if (!ctx) return;
+            
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            oscillator.frequency.value = 880;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+            
+            oscillator.start(ctx.currentTime);
+            oscillator.stop(ctx.currentTime + 0.3);
+            
+            // Haptisches Feedback
+            vibrateShort();
+        }
+
+        function startAlarm() {
+            if (alarmOscillator) return;
+            
+            const ctx = initAudioContext();
+            if (!ctx) return;
+            
+            alarmOscillator = ctx.createOscillator();
+            alarmGain = ctx.createGain();
+            
+            alarmOscillator.connect(alarmGain);
+            alarmGain.connect(ctx.destination);
+            
+            alarmOscillator.frequency.value = 1000;
+            alarmOscillator.type = 'square';
+            
+            alarmGain.gain.setValueAtTime(0.2, ctx.currentTime);
+            
+            alarmOscillator.start(ctx.currentTime);
+            
+            // Pulsieren
+            setInterval(() => {
+                if (alarmOscillator && ctx) {
+                    alarmGain.gain.setValueAtTime(0.2, ctx.currentTime);
+                    alarmGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                }
+            }, 600);
+            
+            // Haptisches Feedback (doppelt)
+            vibrateLong();
+        }
+
+        function stopAlarm() {
+            if (alarmOscillator) {
+                alarmOscillator.stop();
+                alarmOscillator = null;
+                alarmGain = null;
+            }
+        }
+
+        // ========================================
+        // Phase-Konfigurationen
+        // ========================================
+        const phases = {
+            opening: {
+                name: 'Eröffnungsrede',
+                signals: [
+                    { time: 105, label: '1:45', continuous: false },
+                    { time: 120, label: '2:00', continuous: false },
+                    { time: 135, label: '2:15', continuous: true }
+                ]
+            },
+            discussion: {
+                name: 'Freie Aussprache',
+                signals: [
+                    { time: 705, label: '11:45', continuous: false },
+                    { time: 720, label: '12:00', continuous: false },
+                    { time: 735, label: '12:15', continuous: true }
+                ]
+            },
+            closing: {
+                name: 'Schlussrunde',
+                signals: [
+                    { time: 45, label: '0:45', continuous: false },
+                    { time: 60, label: '1:00', continuous: false },
+                    { time: 75, label: '1:15', continuous: true }
+                ]
+            }
+        };
+
+        // ========================================
+        // Globale Variablen
+        // ========================================
+        let currentPhase = 'opening';
+        let elapsedSeconds = 0;
+        let timerInterval = null;
+        let isRunning = false;
+        let triggeredSignals = new Set();
+
+        // ========================================
+        // DOM-Elemente
+        // ========================================
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const startBtn = document.getElementById('start');
+        const pauseBtn = document.getElementById('pause');
+        const stopBtn = document.getElementById('stop');
+        const resetBtn = document.getElementById('reset');
+
+        // ========================================
+        // Funktionen
+        // ========================================
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateDisplay() {
+            const timeDisplay = document.getElementById(`time-${currentPhase}`);
+            timeDisplay.textContent = formatTime(elapsedSeconds);
+            
+            const phaseConfig = phases[currentPhase];
+            const signals = phaseConfig.signals;
+            
+            timeDisplay.classList.remove('warning', 'danger');
+            
+            if (elapsedSeconds >= signals[2].time) {
+                timeDisplay.classList.add('danger');
+            } else if (elapsedSeconds >= signals[0].time) {
+                timeDisplay.classList.add('warning');
+            }
+        }
+
+        function checkSignals() {
+            const phaseConfig = phases[currentPhase];
+            const currentTabContent = document.querySelector(`.tab-content[data-phase="${currentPhase}"]`);
+            const signalIndicators = currentTabContent.querySelectorAll('.signal-indicator');
+            
+            phaseConfig.signals.forEach((signal, index) => {
+                const signalKey = `${currentPhase}-${signal.time}`;
+                
+                if (elapsedSeconds === signal.time && !triggeredSignals.has(signalKey)) {
+                    triggeredSignals.add(signalKey);
+                    signalIndicators[index].classList.add('active');
+                    
+                    if (signal.continuous) {
+                        startAlarm();
+                    } else {
+                        playBeep();
+                    }
+                }
+            });
+        }
+
+        function tick() {
+            elapsedSeconds++;
+            updateDisplay();
+            checkSignals();
+        }
+
+        async function start() {
+            if (isRunning) return;
+            
+            // Audio Context initialisieren (iOS-Fix)
+            initAudioContext();
+            
+            // Wake Lock aktivieren
+            await requestWakeLock();
+            
+            isRunning = true;
+            timerInterval = setInterval(tick, 1000);
+            
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+            stopBtn.disabled = false;
+        }
+
+        async function pause() {
+            if (!isRunning) return;
+            
+            isRunning = false;
+            clearInterval(timerInterval);
+            stopAlarm();
+            
+            // Wake Lock freigeben
+            await releaseWakeLock();
+            
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+        }
+
+        async function stop() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            stopAlarm();
+            
+            // Wake Lock freigeben
+            await releaseWakeLock();
+            
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            stopBtn.disabled = true;
+        }
+
+        function reset() {
+            stop();
+            elapsedSeconds = 0;
+            triggeredSignals.clear();
+            updateDisplay();
+            
+            const currentTabContent = document.querySelector(`.tab-content[data-phase="${currentPhase}"]`);
+            const signalIndicators = currentTabContent.querySelectorAll('.signal-indicator');
+            signalIndicators.forEach(indicator => indicator.classList.remove('active'));
+            
+            stopBtn.disabled = true;
+        }
+
+        function switchPhase(phase) {
+            reset();
+            
+            currentPhase = phase;
+            
+            tabs.forEach(tab => {
+                if (tab.dataset.phase === phase) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            tabContents.forEach(content => {
+                if (content.dataset.phase === phase) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+            
+            updateDisplay();
+        }
+
+        // ========================================
+        // Event-Listener
+        // ========================================
+        startBtn.addEventListener('click', start);
+        pauseBtn.addEventListener('click', pause);
+        stopBtn.addEventListener('click', stop);
+        resetBtn.addEventListener('click', reset);
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                switchPhase(tab.dataset.phase);
+            });
+        });
+
+        // Tastatur-Shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (isRunning) {
+                    pause();
+                } else {
+                    start();
+                }
+            } else if (e.code === 'KeyR') {
+                reset();
+            } else if (e.code === 'KeyS') {
+                stop();
+            }
+        });
+
+        // iOS Audio Context Unlock (wichtig für Safari)
+        document.addEventListener('touchstart', function initTouch() {
+            initAudioContext();
+            document.removeEventListener('touchstart', initTouch);
+        }, { once: true });
+
+        // Initial anzeigen
+        updateDisplay();
+    </script>
+</body>
+</html>
